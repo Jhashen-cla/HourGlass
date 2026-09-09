@@ -1,0 +1,1307 @@
+/* ============================================
+   基础样式 & CSS 变量（双主题）
+   ============================================ */
+:root {
+    --font-family: system-ui, -apple-system, sans-serif;
+    --radius: 12px;
+    --transition: 0.2s ease;
+}
+
+/* ----- 简约主题（默认） ----- */
+body {
+    /* 基础 */
+    --bg-body: #f4f0eb;
+    --bg-card: #ffffff;
+    --bg-sidebar: #faf8f6;
+    --border-color: #e2ddd6;
+    --text-primary: #2c2a28;
+    --text-secondary: #6b6258;
+    --text-muted: #a89a8a;
+    --shadow: 0 8px 30px rgba(0,0,0,0.06);
+    --shadow-strong: 0 12px 48px rgba(0,0,0,0.12);
+    --accent: #b8a99a;
+    --accent-hover: #a89a8a;
+    --panel-bg: #ffffff;
+    --panel-border: #e2ddd6;
+    --input-bg: #faf8f6;
+    --input-border: #d4c9c0;
+    --up: #c87878;
+    --down: #73a89b;
+
+    /* 图表 */
+    --chart-bg: #ffffff;
+    --chart-text: #1e293b;
+    --chart-grid: #f1f5f9;
+    --ma5: rgba(34,34,34,0.45);
+    --ma10: rgba(212,194,120,0.45);
+    --ma20: rgba(216,162,184,0.45);
+    --ma30: rgba(98,140,124,0.45);
+    --dif: #3a3a3a;
+    --dea: #d8a278;
+    --k: #3a3a3a;
+    --d: #d8a278;
+    --j: #a87898;
+    --macd-bar-up: var(--up);
+    --macd-bar-down: var(--down);
+    --cost-line: rgba(59,130,246,0.7);
+
+    /* 事件弹窗（简约） */
+    --event-bg: #faf8f6;
+    --event-text: #2c2a28;
+    --event-border: #d4c9c0;
+    --event-title: #2c2a28;
+    --event-desc-bg: #f4f0eb;
+    --event-desc-border: #b8a99a;
+    --event-btn-bg: #e2ddd6;
+    --event-btn-border: #d4c9c0;
+    --event-btn-text: #2c2a28;
+    --event-btn-hover-bg: #d4c9c0;
+}
+
+/* ----- 黑金主题（鲜明版） ----- */
+body[data-theme="dark"] {
+    --bg-body: #0d0d1a;
+    --bg-card: #141425;
+    --bg-sidebar: #1a1a2e;
+    --border-color: #2a2a42;
+    --text-primary: #f5f0e8;
+    --text-secondary: #d0c8b8;
+    --text-muted: #8a7a6a;
+    --shadow: 0 8px 30px rgba(0,0,0,0.6);
+    --shadow-strong: 0 12px 48px rgba(0,0,0,0.8);
+    --accent: #e6b800;
+    --accent-hover: #ffd700;
+    --panel-bg: #141425;
+    --panel-border: #3a3a52;
+    --input-bg: #1e1e32;
+    --input-border: #4a4a5e;
+    --up: #ff6b6b;
+    --down: #4ecdc4;
+
+    --chart-bg: #141425;
+    --chart-text: #f5f0e8;
+    --chart-grid: #3a3a50;
+    --ma5: rgba(255, 255, 255, 1);
+    --ma10: rgba(255,215,100,0.7);
+    --ma20: rgba(255,150,200,0.6);
+    --ma30: rgba(100,220,200,0.6);
+    --dif: #f5cba0;
+    --dea: #f7dc6f;
+    --k: #f5cba0;
+    --d: #f7dc6f;
+    --j: #d7bde2;
+    --macd-bar-up: #ff6b6b;
+    --macd-bar-down: #4ecdc4;
+    --cost-line: rgba(255,215,0,0.8);
+
+    --event-bg: #141425;
+    --event-text: #f5f0e8;
+    --event-border: #f7dc6f;
+    --event-title: #fce8b0;
+    --event-desc-bg: rgba(255,215,0,0.06);
+    --event-desc-border: #f7dc6f;
+    --event-btn-bg: #2a2a42;
+    --event-btn-border: #5a4a3a;
+    --event-btn-text: #f5f0e8;
+    --event-btn-hover-bg: #3a3a5a;
+}
+
+/* ============================================
+   全局重置 & 基础
+   ============================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: var(--font-family);
+    background: var(--bg-body);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: background var(--transition), color var(--transition);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   登录覆盖层
+   ============================================ */
+#loginOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.35s ease;
+}
+#loginOverlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.login-card {
+    background: var(--bg-card);
+    border-radius: 28px;
+    padding: 40px 44px 44px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--shadow-strong);
+    border: 1px solid var(--border-color);
+    transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+}
+.login-card h1 {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.login-card .sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    border-left: 3px solid var(--accent);
+    padding-left: 14px;
+}
+.login-field {
+    margin-bottom: 18px;
+}
+.login-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.login-field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 15px;
+    transition: 0.2s;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.login-field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    background: var(--bg-card);
+}
+.login-field .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 8px;
+}
+.login-btn:hover {
+    background: var(--accent-hover);
+    transform: scale(0.98);
+}
+.login-btn:active {
+    transform: scale(0.96);
+}
+.login-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   主应用容器
+   ============================================ */
+#mainApp {
+    display: none;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 22px 26px 30px;
+    transition: background var(--transition), box-shadow var(--transition), border var(--transition);
+    border: 1px solid var(--border-color);
+}
+#mainApp.active {
+    display: block;
+}
+
+/* ============================================
+   左侧窄栏
+   ============================================ */
+#leftSidebar {
+    width: 56px;
+    flex-shrink: 0;
+    background: var(--bg-sidebar);
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    padding: 12px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    height: fit-content;
+    min-height: 200px;
+    transition: background var(--transition), border var(--transition);
+}
+.sidebar-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sidebar-btn:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+.sidebar-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   顶部栏
+   ============================================ */
+.top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+    position: relative;
+}
+.top-bar .left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.top-bar .price-display {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    min-width: 100px;
+    color: var(--text-primary);
+}
+.top-bar .trade-btn {
+    padding: 6px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.top-bar .trade-btn:hover {
+    background: var(--accent-hover);
+}
+.top-bar .right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.top-bar .code-watermark {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    user-select: none;
+    pointer-events: none;
+}
+.top-bar .status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--border-color);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
+.top-bar .status.ok {
+    color: #0b7e5e;
+    background: #e0f2ed;
+}
+.top-bar .status.loading {
+    color: #b45309;
+    background: #fef3c7;
+}
+.top-bar .status.err {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+/* ============================================
+   日期导航
+   ============================================ */
+.date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    background: var(--bg-sidebar);
+    border-radius: 14px;
+    padding: 10px 20px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+    transition: background var(--transition), border var(--transition);
+}
+.date-nav .left-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.date-nav .label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.date-nav .cur-date {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
+    background: var(--bg-card);
+    padding: 2px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    min-width: 150px;
+    text-align: center;
+}
+.date-nav .cur-state {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--border-color);
+    padding: 2px 14px;
+    border-radius: 20px;
+    margin-left: 6px;
+}
+.date-nav .btn-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.date-nav .btn-state {
+    padding: 6px 22px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--border-color);
+    color: var(--text-secondary);
+}
+.date-nav .btn-state:hover:not(:disabled) {
+    background: var(--input-border);
+}
+.date-nav .btn-state:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: var(--border-color);
+    color: var(--text-muted);
+}
+.date-nav .btn-state.active-morning {
+    background: #fde68a;
+    color: #78350f;
+}
+.date-nav .btn-state.active-afternoon {
+    background: #bbf7d0;
+    color: #14532d;
+}
+.date-nav .btn-state .icon {
+    font-size: 16px;
+}
+.date-nav .range-info {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   K线信息栏（两行布局）
+   ============================================ */
+.kline-info-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 18px;
+    background: var(--bg-sidebar);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+    transition: background var(--transition), border var(--transition);
+}
+.kline-info-bar .info-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.kline-info-bar .info-date-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.info-left-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+.info-label {
+    color: var(--text-muted);
+}
+.info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.black-text {
+    color: var(--text-primary) !important;
+}
+.red {
+    color: var(--up);
+    font-weight: 600;
+}
+.green {
+    color: var(--down);
+    font-weight: 600;
+}
+
+/* ============================================
+   指标 & 控件
+   ============================================ */
+.indicator-row {
+    margin: 12px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+#indicatorSelect {
+    padding: 6px 18px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--input-border);
+    min-width: 150px;
+    cursor: pointer;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+#indicatorSelect:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.ma-check-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+.ma-check-box input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+}
+
+/* ============================================
+   图表
+   ============================================ */
+#main-chart {
+    width: 100%;
+    height: 620px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    overflow: hidden;
+    position: relative;
+    transition: border var(--transition), background var(--transition);
+}
+
+/* ============================================
+   提示文字
+   ============================================ */
+.hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 14px;
+    text-align: center;
+}
+
+/* ============================================
+   交易面板 (浮窗)
+   ============================================ */
+#tradePanel {
+    display: none;
+    position: fixed;
+    top: 40px;
+    right: 40px;
+    width: 520px;
+    max-height: 80vh;
+    min-height: 400px;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-strong);
+    z-index: 999;
+    padding: 20px 24px 22px;
+    border: 1px solid var(--panel-border);
+    resize: both;
+    overflow: auto;
+    cursor: default;
+    transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+}
+#tradePanel.visible {
+    display: block;
+}
+#tradePanel .panel-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+}
+#tradePanel .panel-title .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+#tradePanel .panel-title .close-btn:hover {
+    color: var(--text-primary);
+}
+.trade-section {
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 16px;
+}
+.trade-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.trade-section .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+.stat-item .stat-label {
+    color: var(--text-muted);
+}
+.stat-item .stat-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.holdings-table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+    margin-top: 4px;
+}
+.holdings-table th {
+    background: var(--bg-sidebar);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    font-size: 12px;
+}
+.holdings-table td {
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+    color: var(--text-primary);
+}
+.holdings-table .red { color: var(--up); }
+.holdings-table .green { color: var(--down); }
+.trade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.trade-form .row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.trade-form .row label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 40px;
+}
+.trade-form .row input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 80px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.trade-form .row input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.trade-form .btn-buy {
+    background: var(--up);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.trade-form .btn-sell {
+    background: var(--down);
+    color: #fff;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.trade-form .btn-buy:hover,
+.trade-form .btn-sell:hover {
+    opacity: 0.85;
+}
+.trade-form .fee-info {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   基本面弹窗
+   ============================================ */
+#fundamentalPanel {
+    position: fixed;
+    top: 80px;
+    left: 80px;
+    width: 480px;
+    max-height: 80vh;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow-strong);
+    z-index: 1000;
+    border: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    resize: both;
+    min-height: 200px;
+    transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+}
+#fundamentalPanel .panel-title {
+    padding: 12px 16px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+    cursor: move;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+#fundamentalPanel .panel-title span {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+#fundamentalPanel .panel-title .close-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+#fundamentalPanel .panel-title .close-btn:hover {
+    color: var(--text-primary);
+}
+#fundamentalPanel .panel-body {
+    flex: 1;
+    overflow: auto;
+    padding: 4px 0;
+}
+#fundamentalPanel table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+#fundamentalPanel td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+#fundamentalPanel td:first-child {
+    color: var(--text-muted);
+    width: 45%;
+}
+#fundamentalPanel td:last-child {
+    text-align: right;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* ============================================
+   事件弹窗（双主题，由 CSS 变量控制）
+   ============================================ */
+#eventPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    max-height: 80vh;
+    background: var(--event-bg);
+    border: 2px solid var(--event-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-strong);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 24px 28px 20px;
+    color: var(--event-text);
+    font-family: var(--font-family);
+    transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+}
+#eventPanel .event-title {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--event-title);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+#eventPanel .event-image {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 60px;
+    line-height: 1;
+}
+#eventPanel .event-desc {
+    font-size: 15px;
+    color: var(--event-text);
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    text-align: left;
+    background: var(--event-desc-bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--event-desc-border);
+}
+#eventPanel .event-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+    width: 100%;
+}
+#eventPanel .event-btn {
+    width: 100%;
+    padding: 10px 0;
+    border: 1px solid var(--event-btn-border);
+    border-radius: 6px;
+    background: var(--event-btn-bg);
+    color: var(--event-btn-text);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+#eventPanel .event-btn:hover {
+    background: var(--event-btn-hover-bg);
+    border-color: var(--event-border);
+}
+#eventPanel .event-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    transition: color 0.15s;
+}
+#eventPanel .event-close:hover {
+    color: var(--event-title);
+}
+
+/* ============================================
+   设置面板
+   ============================================ */
+#settingsPanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-strong);
+    z-index: 3000;
+    padding: 20px 24px;
+    color: var(--text-primary);
+    transition: background var(--transition), border var(--transition), box-shadow var(--transition);
+}
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.settings-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+.settings-close:hover {
+    color: var(--text-primary);
+}
+.settings-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 16px;
+}
+.settings-tab {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: color var(--transition), border var(--transition);
+}
+.settings-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.settings-tab:hover {
+    color: var(--text-primary);
+}
+.settings-page {
+    display: none;
+}
+.settings-page.active {
+    display: block;
+}
+.theme-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background var(--transition), border var(--transition);
+    margin-bottom: 8px;
+}
+.theme-option:hover {
+    background: var(--bg-sidebar);
+}
+.theme-option.active {
+    border-color: var(--accent);
+}
+.theme-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    display: inline-block;
+    transition: background var(--transition), border var(--transition);
+}
+.theme-option.active .theme-check {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ============================================
+   响应式
+   ============================================ */
+@media (max-width: 700px) {
+    #tradePanel {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        min-height: 300px;
+    }
+    #fundamentalPanel {
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        top: 20px !important;
+        max-height: calc(100vh - 40px);
+    }
+    #settingsPanel {
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        top: 20px !important;
+        max-height: calc(100vh - 40px);
+    }
+    .login-card {
+        padding: 28px 20px;
+        margin: 16px;
+    }
+    #mainApp {
+        padding: 14px 12px 20px;
+    }
+    #main-chart {
+        height: 420px;
+    }
+    .date-nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .date-nav .left-group {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .date-nav .btn-group {
+        justify-content: center;
+    }
+    .kline-info-bar .info-date-right {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 2px;
+    }
+    .info-left-group {
+        gap: 12px;
+    }
+    .indicator-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .top-bar .right {
+        align-self: flex-start;
+    }
+    #leftSidebar {
+        width: 40px;
+        padding: 8px 2px;
+    }
+    .sidebar-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   搜索框（登录页）
+   ============================================ */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+}
+#loginCode {
+    width: 100%;
+    padding: 10px 100px 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+#loginCode:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+.stock-name-hint {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0 0 10px 10px;
+    box-shadow: var(--shadow);
+    z-index: 1001;
+}
+.search-dropdown.active {
+    display: block;
+}
+.search-dropdown-item {
+    padding: 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.search-dropdown-item:hover {
+    background: var(--bg-sidebar);
+}
+.search-dropdown-item .code {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.search-dropdown-item .name {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* ============================================
+   交易面板新样式（重新整理，修正宽度问题）
+   ============================================ */
+.trade-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 12px;
+}
+.trade-tab {
+    flex: 1;
+    padding: 8px 0;
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s, border-color 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+.trade-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.trade-tab:hover {
+    color: var(--text-primary);
+}
+
+.trade-price-display {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    border-bottom: 1px dashed var(--border-color);
+}
+.trade-price-display .price-label {
+    color: var(--text-muted);
+}
+.trade-price-display .price-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* 输入框占满宽度 */
+.trade-input-group {
+    margin-bottom: 8px;
+    width: 100%;
+}
+.trade-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.trade-input-wrapper input {
+    width: 100%;
+    padding: 8px 90px 8px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+.trade-input-wrapper input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.trade-input-wrapper .trade-shares-hint {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: var(--text-muted);
+    pointer-events: none;
+    white-space: nowrap;
+    font-weight: 400;
+}
+
+.trade-quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.trade-quick-buttons .quick-btn {
+    padding: 6px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-sidebar);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    text-align: center;
+}
+.trade-quick-buttons .quick-btn:hover {
+    background: var(--border-color);
+    border-color: var(--accent);
+}
+.trade-quick-buttons .quick-btn:active {
+    transform: scale(0.96);
+}
+
+.trade-confirm-btn {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    background: var(--accent);
+    color: #fff;
+}
+.trade-confirm-btn:hover {
+    opacity: 0.85;
+}
+.trade-confirm-btn:active {
+    transform: scale(0.98);
+}
+.trade-form .fee-info {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* 规则弹窗样式 */
+#tradeRulesModal {
+    display: none;
+}
+#tradeRulesModal[style*="display: flex"] {
+    display: flex !important;
+}
+#tradeRulesModal .modal-content {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 24px 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-strong);
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+#tradeRulesModal h2 {
+    color: var(--text-primary);
+    margin-top: 0;
+}
+#tradeRulesModal ul {
+    padding-left: 20px;
+    color: var(--text-secondary);
+}
+#tradeRulesModal li {
+    margin-bottom: 4px;
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>HourGlass 时光沙漏</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+
+    <!-- ===== 参数输入覆盖层 ===== -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h1>HourGlass</h1>
+            <div class="sub">模拟交易系统</div>
+
+            <div class="login-field">
+                <label>股票代码</label>
+                <div class="search-wrapper">
+                    <input id="loginCode" placeholder="输入标的" value="603871">
+                    <span id="stockNameDisplay" class="stock-name-hint"></span>
+                    <div id="searchDropdown" class="search-dropdown"></div>
+                </div>
+            </div>
+            <div class="login-field">
+                <label>起始日期</label>
+                <input id="loginStart" type="date" value="2022-01-01">
+            </div>
+            <div class="login-field">
+                <label>截止日期</label>
+                <input id="loginEnd" type="date" value="2026-07-01">
+            </div>
+            <div class="login-field">
+                <label>当前日期</label>
+                <input id="loginCurrent" type="date" value="2026-07-01">
+                <div class="hint">开始游玩的日期</div>
+            </div>
+            <div class="login-field">
+                <label>模拟本金</label>
+                <input id="loginCapital" type="number" value="100000" step="1000">
+                <div class="hint">模拟交易初始资金</div>
+            </div>
+
+            <button class="login-btn" id="loginConfirm">Start Game</button>
+        </div>
+    </div>
+
+    <!-- ===== 主应用 ===== -->
+    <div id="mainApp">
+        <!-- 主容器 flex -->
+        <div style="display: flex; gap: 12px;">
+            <!-- 左侧窄栏 -->
+            <div id="leftSidebar">
+                <button class="sidebar-btn" id="settingsBtn" title="设置">⚙️</button>
+                <button class="sidebar-btn" id="fundamentalBtn" title="基本面">📊</button>
+                <!-- 可在此添加更多按钮 -->
+            </div>
+
+            <!-- 设置面板（浮窗） -->
+            <div id="settingsPanel" style="display:none;">
+                <div class="settings-header">
+                    <span>设置</span>
+                    <button class="settings-close" id="settingsClose">✕</button>
+                </div>
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="theme">主题</button>
+                    <button class="settings-tab" data-tab="other">其他</button>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-page active" id="page-theme">
+                        <div class="theme-option" data-theme="light">
+                            <span>☀️ 简约主题</span>
+                            <span class="theme-check"></span>
+                        </div>
+                        <div class="theme-option" data-theme="dark">
+                            <span>🌙 黑金主题</span>
+                            <span class="theme-check"></span>
+                        </div>
+                    </div>
+                    <div class="settings-page" id="page-other">
+                        <p style="color:var(--text-muted);text-align:center;padding:20px;">其他设置（待开发）</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧主体 -->
+            <div style="flex:1; min-width:0;">
+                <!-- 顶部栏 -->
+                <div class="top-bar">
+                    <div class="left">
+                        <span class="price-display" id="currentPrice">--</span>
+                        <button class="trade-btn" id="tradeToggleBtn">📈 交易</button>
+                    </div>
+                    <div class="right">
+                        <span class="code-watermark" id="displayCode">sh.600036</span>
+                        <span class="status" id="statusBadge">就绪</span>
+                    </div>
+                </div>
+
+                <!-- 当前日期 + 早盘/尾盘按钮 -->
+                <div class="date-nav">
+                    <div class="left-group">
+                        <span class="label">📅 当前日期</span>
+                        <span class="cur-date" id="displayDateLabel">--</span>
+                        <span class="cur-state" id="stateLabel">尾盘</span>
+                        <span class="range-info" id="rangeInfo">起始 ~ 截止</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-state" id="morningBtn"><span class="icon">🌅</span> 早盘</button>
+                        <button class="btn-state" id="afternoonBtn"><span class="icon">🌇</span> 尾盘</button>
+                    </div>
+                </div>
+
+                <!-- K线信息栏 -->
+                <div class="kline-info-bar">
+                    <!-- 第一行 -->
+                    <div class="info-row">
+                        <div class="info-left-group">
+                            <div class="info-item"><span class="info-label">开盘</span><span class="info-value" id="infoOpen">--</span></div>
+                            <div class="info-item"><span class="info-label">最高</span><span class="info-value" id="infoHigh">--</span></div>
+                            <div class="info-item"><span class="info-label">最低</span><span class="info-value" id="infoLow">--</span></div>
+                            <div class="info-item"><span class="info-label">收盘</span><span class="info-value" id="infoClose">--</span></div>
+                            <div class="info-item"><span class="info-label">涨幅</span><span class="info-value" id="infoChg">--</span></div>
+                        </div>
+                        <div class="info-date-right">
+                            <span class="info-label">选中日期</span>
+                            <span class="info-value black-text" id="infoDate">--</span>
+                        </div>
+                    </div>
+                    <!-- 第二行 -->
+                    <div class="info-row">
+                        <div class="info-left-group">
+                            <div class="info-item"><span class="info-label">成交</span><span class="info-value black-text" id="infoVol">--</span></div>
+                            <div class="info-item"><span class="info-label">换手</span><span class="info-value black-text" id="infoTurnover">--</span></div>
+                            <div class="info-item"><span class="info-label">振幅</span><span class="info-value black-text" id="infoAmplitude">--</span></div>
+                            <div class="info-item"><span class="info-label">市盈(TTM)</span><span class="info-value black-text" id="infoPeTTM">--</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表 -->
+                <div id="main-chart"></div>
+
+                <!-- 控件 -->
+                <div class="indicator-row">
+                    <select id="indicatorSelect">
+                        <option value="volume">📊 成交量</option>
+                        <option value="macd">📈 MACD</option>
+                        <option value="kdj">📉 KDJ</option>
+                    </select>
+                    <label class="ma-check-box">
+                        <input type="checkbox" id="showMaCheck"> 显示均线 (5/10/20/30)
+                    </label>
+                </div>
+
+                <div class="hint">💡 点击K线查看数据 · 早盘横线 · 尾盘完整K线 · 交易按钮模拟买卖</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 交易面板 (浮窗) ===== -->
+    <div id="tradePanel">
+        <div class="panel-title" id="panelTitle">
+            <span>
+                📊 交易面板
+                <button id="tradeRulesBtn" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text-muted);margin-left:4px;vertical-align:middle;" title="交易规则">❓</button>
+            </span>
+            <button class="close-btn" id="tradePanelClose">&times;</button>
+        </div>
+
+        <!-- 账户概况 & 持仓 -->
+        <div class="trade-section">
+            <div class="section-label">账户概况</div>
+            <div class="stat-grid">
+                <div class="stat-item"><span class="stat-label">总资产</span><span class="stat-value" id="totalAsset">--</span></div>
+                <div class="stat-item"><span class="stat-label">总市值</span><span class="stat-value" id="totalMarketValue">--</span></div>
+                <div class="stat-item"><span class="stat-label">可用资金</span><span class="stat-value" id="availableCash">--</span></div>
+                <div class="stat-item"><span class="stat-label">仓位</span><span class="stat-value" id="positionRatio">--</span></div>
+            </div>
+        </div>
+        <div class="trade-section">
+            <div class="section-label">持仓</div>
+            <table class="holdings-table" id="holdingsTable">
+                <thead>
+                    <tr>
+                        <th>代码</th>
+                        <th>总盈亏</th>
+                        <th>收益率</th>
+                        <th>成本</th>
+                        <th>当日盈亏</th>
+                        <th>股数/可用</th>
+                    </tr>
+                </thead>
+                <tbody id="holdingsBody">
+                    <tr><td colspan="6" style="text-align:center;color:#94a3b8;">暂无持仓</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 新交易操作区 -->
+        <div class="trade-section" id="tradeActionArea">
+            <div class="section-label">下单</div>
+            <!-- 标签页切换 -->
+            <div class="trade-tabs">
+                <button class="trade-tab active" data-tab="buy">买入</button>
+                <button class="trade-tab" data-tab="sell">卖出</button>
+            </div>
+            <!-- 当前价格 -->
+            <div class="trade-price-display">
+                <span class="price-label">当前价格</span>
+                <span class="price-value" id="tradeCurrentPrice">--</span>
+            </div>
+            <!-- 股数输入 -->
+            <div class="trade-input-group">
+                <div class="trade-input-wrapper">
+                    <input type="number" id="tradeSharesInput" value="1" step="1" min="1">
+                    <span class="trade-shares-hint" id="tradeSharesHint">100股</span>
+                </div>
+            </div>
+            <!-- 快速仓位按钮 -->
+            <div class="trade-quick-buttons">
+                <button class="quick-btn" data-fraction="0.1">1/10</button>
+                <button class="quick-btn" data-fraction="0.2">1/5</button>
+                <button class="quick-btn" data-fraction="0.25">1/4</button>
+                <button class="quick-btn" data-fraction="0.333">1/3</button>
+                <button class="quick-btn" data-fraction="0.5">1/2</button>
+                <button class="quick-btn" data-fraction="0.75">3/4</button>
+                <button class="quick-btn" data-fraction="0.8">4/5</button>
+                <button class="quick-btn" data-fraction="1">满仓</button>
+            </div>
+            <!-- 确认按钮 -->
+            <button class="trade-confirm-btn" id="tradeConfirmBtn">确认买入</button>
+        </div>
+    </div>
+
+    <!-- 交易规则弹窗 -->
+    <div id="tradeRulesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center;">
+        <div style="background:var(--bg-card); border-radius:16px; padding:24px 32px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:var(--shadow-strong); border:1px solid var(--border-color); position:relative;">
+            <button id="closeRulesModal" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            <h2 style="margin-top:0; color:var(--text-primary);">📜 交易规则</h2>
+            <div style="color:var(--text-secondary); line-height:1.8; font-size:14px;">
+                <p><strong>买入规则：</strong></p>
+                <ul style="padding-left:20px;">
+                    <li>使用可用资金买入，成交价 = 当前K线的开盘价（早盘）或收盘价（尾盘）。</li>
+                    <li>买入佣金 = 成交金额 × 0.03%（最低5元），从现金中扣除。</li>
+                    <li>买入后立即更新持仓成本和可用股数。</li>
+                    <li>T+1 限制：当日买入的股票当日不可卖出。</li>
+                </ul>
+                <p><strong>卖出规则：</strong></p>
+                <ul style="padding-left:20px;">
+                    <li>只能卖出当日可卖股数（总持仓 - 当日买入）。</li>
+                    <li>成交价 = 当前K线的开盘价（早盘）或收盘价（尾盘）。</li>
+                    <li>卖出佣金 = 成交金额 × 0.03%（最低5元），印花税 = 成交金额 × 0.05%。</li>
+                    <li>卖出所得现金实时到账，可用于后续买入。</li>
+                </ul>
+                <p><strong>其他说明：</strong></p>
+                <ul style="padding-left:20px;">
+                    <li>交易标记显示在K线上方/下方（B=买入，S=卖出，T=同一天买卖）。</li>
+                    <li>清仓后历史交易标记变为灰色，不再影响当前持仓。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="JavaScirpt/main.js"></script>
+</body>
+</html>

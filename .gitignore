@@ -31,3 +31,6 @@ logs/
 # 系统垃圾
 .DS_Store
 Thumbs.db
+
+# 纯文本
+*.txt
