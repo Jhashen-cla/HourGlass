@@ -12,6 +12,7 @@ import { executeTrade } from './trading.js';
 import { loadEvents } from './events.js';
 import { state } from './state.js';
 import { renderChart } from './chartCore.js';
+import { initChipUI, applyChipLayout } from './chipDistribution.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     // 加载股票列表
@@ -73,6 +74,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     makeDraggable();
 
+    // 筹码峰浮层（点击K线开合）
+    initChipUI();
+
     const btnBuy = document.getElementById('btnBuy');
     const btnSell = document.getElementById('btnSell');
     if (btnBuy) {
@@ -97,11 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            if (window.chart) {
-                const w = document.getElementById('main-chart').clientWidth;
-                window.chart.resize(w, 620);
-                // 保存可见范围由 state 管理，但在 resize 中我们保留原逻辑
-            }
+            // 重新计算分屏宽度、同步图表尺寸并重绘筹码峰
+            if (state.chart) applyChipLayout();
         }, 200);
     });
 

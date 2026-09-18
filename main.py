@@ -69,7 +69,9 @@ def get_kline(code: str, start: str, end: str):
                 q.high,
                 q.low,
                 q.close,
-                q.volume
+                q.volume,
+                q.amount,   # 成交额(元)
+                q.turn      # 换手率(%)
             ])
     finally:
         session.close()
@@ -85,6 +87,8 @@ def get_kline(code: str, start: str, end: str):
         low = float(row[4])
         close = float(row[5])
         volume = float(row[6])
+        amount = float(row[7] or 0)
+        turn = float(row[8] or 0)
         close_raw.append(close)
         kline_data.append({
             "date": date,
@@ -93,7 +97,9 @@ def get_kline(code: str, start: str, end: str):
             "high": high,
             "low": low,
             "close": close,
-            "volume": volume
+            "volume": volume,
+            "amount": amount,
+            "turn": turn
         })
         vol_data.append({
             "time": date,

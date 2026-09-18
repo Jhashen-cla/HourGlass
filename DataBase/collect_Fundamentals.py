@@ -10,23 +10,84 @@
     python collect_fundamentals.py --code 000001 --from 2023-01-01 --to 2024-12-31
 """
 
+import os
+import sys
+
+# 允许从仓库根目录（python DataBase/collect_Fundamentals.py）
+# 或从 DataBase 目录（python collect_Fundamentals.py）两种方式启动
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
 import logging
 import argparse
 import pandas as pd
 from bisect import bisect_right
 from datetime import datetime
-from DataBase import get_session, engines, Base
-from Models import Fundamentals, StockList
+from DataBase import get_session, engines
+from DataBase.Models import Fundamentals, StockList
 import akshare as ak
 
-# 建表（若表不存在，自动创建）
-Base.metadata.create_all(engines["fundamentals"])
+# 只创建本脚本负责的表（不再把 4 张表全建进 Fundamentals.db）
+Fundamentals.__table__.create(bind=engines["fundamentals"], checkfirst=True)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 REQUEST_INTERVAL = 0.8          # 请求间隔（秒）
+
+# 指标列别名（与 Models.Fundamentals 的字段一一对应）
+EXPECTED_COLUMNS = [
+    '摊薄每股收益(元)',
+    '加权每股收益(元)',
+    '每股收益_调整后(元)',
+    '扣除非经常性损益后的每股收益(元)',
+    '每股净资产_调整前(元)',
+    '每股净资产_调整后(元)',
+    '每股经营性现金流(元)',
+    '每股资本公积金(元)',
+    '每股未分配利润(元)',
+    '总资产(元)',
+    '总资产增长率(%)',
+    '净资产增长率(%)',
+    '扣除非经常性损益后的净利润(元)',
+    '主营业务利润(元)',
+    '非主营比重',
+    '净利润增长率(%)',
+    '资产负债率(%)',
+    '股东权益比率(%)',
+    '经营现金净流量与净利润的比率(%)',
+    '经营现金净流量对负债比率(%)',
+]
+
+_columns_checked = False
+
+def check_columns(df, code):
+    """首次取到数据时校验列名，避免 AkShare 改列名后静默写入 0.0"""
+    global _columns_checked
+    if _columns_checked:
+        return
+    _columns_checked = True
+    missing = [c for c in EXPECTED_COLUMNS if c not in set(df.columns)]
+    if missing:
+        logger.warning(
+            f"[列名校验] 首个样本 {code} 缺少以下指标列，这些字段将写入 0.0: {missing}"
+        )
+        logger.warning(f"[列名校验] 实际返回的列名: {list(df.columns)}")
+    else:
+        logger.info(f"[列名校验] 20 个指标列全部匹配（样本 {code}）")
+
+def fetch_indicator(code, start_date):
+    """
+    拉取财务指标。
+    AkShare 较新版本支持 start_year，可只拉取需要的年份（实测 8s -> 0.4s）；
+    老版本不支持该参数时自动回退到原调用方式。
+    """
+    try:
+        return ak.stock_financial_analysis_indicator(
+            symbol=code, start_year=str(start_date.year)
+        )
+    except TypeError:
+        return ak.stock_financial_analysis_indicator(symbol=code)
 
 # ------------------ 工具函数 ------------------
 def safe_get(series, aliases, default=0.0):
@@ -64,10 +125,11 @@ def collect_fundamentals_for_code(code: str, start_date, end_date):
     """
     # 1. 获取财务指标
     try:
-        df = ak.stock_financial_analysis_indicator(symbol=code)
+        df = fetch_indicator(code, start_date)
         if df.empty:
             logger.warning(f"股票 {code} 无财务数据")
             return []
+        check_columns(df, code)
     except Exception as e:
         logger.warning(f"股票 {code} 获取财务数据失败: {e}")
         return []
@@ -133,15 +195,26 @@ def collect_fundamentals_for_code(code: str, start_date, end_date):
         objs.append(Fundamentals(**data))
     return objs
 
-def save_fundamentals(fund_objs, session):
+def save_fundamentals(fund_objs, session, start_date, end_date):
+    """
+    只替换 [start_date, end_date] 窗口内的记录，窗口外的历史数据保持不变。
+    （原实现先删掉该股票的全部历史再插入，做区间更新时会丢失窗口外的数据）
+    """
     if not fund_objs:
         return
     code = fund_objs[0].code
     try:
-        session.query(Fundamentals).filter(Fundamentals.code == code).delete()
+        deleted = session.query(Fundamentals).filter(
+            Fundamentals.code == code,
+            Fundamentals.report_date >= start_date,
+            Fundamentals.report_date <= end_date,
+        ).delete(synchronize_session=False)
         session.add_all(fund_objs)
         session.commit()
-        logger.info(f"✅ 股票 {code} 保存成功，共 {len(fund_objs)} 条记录")
+        logger.info(
+            f"✅ 股票 {code} 保存成功，共 {len(fund_objs)} 条记录"
+            f"（替换窗口内旧记录 {deleted} 条，窗口外历史保持不变）"
+        )
     except Exception as e:
         session.rollback()
         logger.error(f"❌ 保存股票 {code} 失败: {e}")
@@ -168,6 +241,10 @@ def collect_all_fundamentals(start_date, end_date, start_code=None, single_code=
             logger.info("全量采集所有股票")
 
         codes = [row.code for row in query.all()]
+    except Exception as e:
+        logger.error(f"读取 StockList.db 失败: {e}")
+        logger.error("请先运行 python DataBase/collect_StockList.py 生成股票列表")
+        return
     finally:
         stock_session.close()
 
@@ -177,18 +254,21 @@ def collect_all_fundamentals(start_date, end_date, start_code=None, single_code=
 
     logger.info(f"本次共 {len(codes)} 只股票，日期区间: {start_date} ~ {end_date}")
     fund_session = get_session('fundamentals')
+    saved = skipped = 0
     try:
         for idx, code in enumerate(codes, 1):
             logger.info(f"进度: {idx}/{len(codes)} - {code}")
             objs = collect_fundamentals_for_code(code, start_date, end_date)
             if objs:
-                save_fundamentals(objs, fund_session)
+                save_fundamentals(objs, fund_session, start_date, end_date)
+                saved += 1
             else:
+                skipped += 1
                 logger.info(f"{code} 无符合条件的数据，跳过")
             time.sleep(REQUEST_INTERVAL)
     finally:
         fund_session.close()
-    logger.info("🎉 全部采集完成！")
+    logger.info(f"🎉 全部采集完成！成功 {saved} 只，跳过 {skipped} 只")
 
 # ------------------ 命令行入口 ------------------
 if __name__ == "__main__":

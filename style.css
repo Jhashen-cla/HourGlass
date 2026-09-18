@@ -555,13 +555,152 @@ body {
    ============================================ */
 #main-chart {
     width: 100%;
-    height: 620px;
+    height: 100%;
     border-radius: 14px;
     border: 1px solid var(--border-color);
     background: var(--bg-card);
     overflow: hidden;
     position: relative;
     transition: border var(--transition), background var(--transition);
+}
+
+/* ============================================
+   图表 + 筹码峰分屏
+   ============================================ */
+#chartSplit {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    height: 620px;
+}
+
+#chartPane {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+/* 分屏拖动条 */
+#chipSplitter {
+    display: none;
+    flex: 0 0 auto;
+    width: 10px;
+    height: 100%;
+    position: relative;
+    cursor: col-resize;
+}
+
+#chipSplitter::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 42px;
+    border-radius: 2px;
+    background: var(--border-color);
+    transition: background var(--transition), height var(--transition);
+}
+
+#chipSplitter:hover::after,
+#chipSplitter.dragging::after {
+    background: var(--accent);
+    height: 72px;
+}
+
+/* 筹码峰面板 */
+#chipPane {
+    display: none;
+    flex: 0 0 auto;
+    width: 0;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    transition: border var(--transition), background var(--transition);
+}
+
+#chipCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#chipHeader {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 26px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-shadow: 0 0 4px var(--bg-card), 0 0 4px var(--bg-card);
+    pointer-events: none;
+}
+
+.chip-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.chip-note {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.chip-stats {
+    color: var(--text-secondary);
+}
+
+#chipCloseBtn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    line-height: 16px;
+    font-size: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    pointer-events: auto;
+    opacity: 0.75;
+    transition: opacity var(--transition), color var(--transition);
+}
+
+#chipCloseBtn:hover {
+    opacity: 1;
+    color: var(--text-primary);
+}
+
+/* 下方“筹码峰”开关按钮 */
+.chip-toggle-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.chip-toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.chip-toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
 }
 
 /* ============================================
@@ -991,6 +1130,45 @@ body {
 .theme-option.active .theme-check {
     background: var(--accent);
     border-color: var(--accent);
+}
+
+/* 设置页：带下拉框的选项行（筹码峰等） */
+.settings-field {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+.settings-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--input-border, var(--border-color));
+    background: var(--input-bg, var(--bg-card));
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border var(--transition), background var(--transition);
+}
+
+.settings-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.settings-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
 }
 
 /* ============================================

@@ -27,6 +27,8 @@ class DailyQuote(Base):
     low = Column(Float, nullable=False)
     close = Column(Float, nullable=False)
     volume = Column(Float, nullable=False)
+    amount = Column(Float, default=0.0)     # 成交额(元)
+    turn = Column(Float, default=0.0)       # 换手率(%)
     
     __table_args__ = (UniqueConstraint('code', 'date', name='uq_quote_code_date'),)
 

@@ -64,6 +64,7 @@
                 </div>
                 <div class="settings-tabs">
                     <button class="settings-tab active" data-tab="theme">主题</button>
+                    <button class="settings-tab" data-tab="chip">筹码峰</button>
                     <button class="settings-tab" data-tab="other">其他</button>
                 </div>
                 <div class="settings-content">
@@ -75,6 +76,19 @@
                         <div class="theme-option" data-theme="dark">
                             <span>🌙 黑金主题</span>
                             <span class="theme-check"></span>
+                        </div>
+                    </div>
+                    <div class="settings-page" id="page-chip">
+                        <div class="settings-field">
+                            <label class="settings-label" for="chipBindMode">筹码峰基准</label>
+                            <select id="chipBindMode" class="settings-select">
+                                <option value="infobar">绑定信息栏</option>
+                                <option value="rightmost">绑定最右侧K线</option>
+                            </select>
+                            <div class="settings-hint">
+                                绑定信息栏：点选K线、按早/尾盘推进时，筹码峰跟随信息栏。<br>
+                                绑定最右侧K线：始终按当前视图最右边那根K线显示，拖动或缩放时间轴也会更新。
+                            </div>
                         </div>
                     </div>
                     <div class="settings-page" id="page-other">
@@ -138,8 +152,18 @@
                     </div>
                 </div>
 
-                <!-- 图表 -->
-                <div id="main-chart"></div>
+                <!-- 图表 + 筹码峰分屏（打开筹码峰时K线缩到左边，中间分隔条可拖动调节比例） -->
+                <div id="chartSplit">
+                    <div id="chartPane">
+                        <div id="main-chart"></div>
+                    </div>
+                    <div id="chipSplitter" title="拖动调节分屏比例"></div>
+                    <div id="chipPane">
+                        <canvas id="chipCanvas"></canvas>
+                        <div id="chipHeader"></div>
+                        <button id="chipCloseBtn" title="关闭筹码峰">✕</button>
+                    </div>
+                </div>
 
                 <!-- 控件 -->
                 <div class="indicator-row">
@@ -148,6 +172,7 @@
                         <option value="macd">📈 MACD</option>
                         <option value="kdj">📉 KDJ</option>
                     </select>
+                    <button class="chip-toggle-btn" id="chipToggleBtn" title="打开 / 关闭筹码峰">📊 筹码峰</button>
                     <label class="ma-check-box">
                         <input type="checkbox" id="showMaCheck"> 显示均线 (5/10/20/30)
                     </label>

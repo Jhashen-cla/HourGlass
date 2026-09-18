@@ -7,6 +7,7 @@ import {
     fillInfoBar, updateRangeInfo, updateUIState, updatePortfolioUI,
     updateStatus, updateTopPrice, resetInfoBar
 } from './ui.js';
+import { resetChipModel, prepareChipHistory } from './chipDistribution.js';
 
 // ---------- 加载股票列表 ----------
 let stockListData = [];
@@ -90,6 +91,11 @@ export async function loadData(code, start, end, currentDateParam, capital) {
         if (fundData.length > 0) {
             state.latestFloatShare = fundData[fundData.length - 1].float_share || 0;
         }
+
+        // 筹码峰：重置模型（需在基本面之后，才能用流通股本估算换手率），
+        // 并异步补齐登录起始日之前的历史（只喂模型，不显示）
+        resetChipModel();
+        prepareChipHistory(code, start);
 
         let targetIdx = 0;
         for (let i = 0; i < state.fullDataCache.length; i++) {

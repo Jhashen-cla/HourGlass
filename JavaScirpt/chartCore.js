@@ -2,10 +2,11 @@
 //  图表核心功能（使用 state）
 // ============================================================
 import { state } from './state.js';
-import { findIndexByDate, getCSSColor } from './utils.js';
+import { getCSSColor } from './utils.js';
 import {
     updateDateLabel, updateUIState, updateTopPrice, updatePortfolioUI
 } from './ui.js';
+import { refreshChips, applyChipLayout, onViewChanged } from './chipDistribution.js';
 
 // ---------- 辅助：获取交易标记 ----------
 function getTradeMarkers() {
@@ -259,6 +260,8 @@ export function initChart() {
     state.chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
         state.savedTimeRange = range;
         refreshHighLowMarkers();
+        // 价格轴可能变化需重绘；绑定“最右侧K线”时这里还会切换筹码峰基准日
+        onViewChanged();
     });
 
     state.chart.subscribeClick(param => {
@@ -268,11 +271,12 @@ export function initChart() {
         const target = state.fullDataCache.find(d => d.date === timePoint);
         if (target) {
             import('./ui.js').then(module => {
-                module.fillInfoBar(target, false);
+                module.fillInfoBar(target, false);   // 信息栏更新后会带动筹码峰（见 ui.js）
             });
         }
     });
 
+    applyChipLayout();   // 新建图表后同步分屏尺寸（面板可能仍处于打开状态）
     return state.chart;
 }
 
@@ -431,4 +435,5 @@ export function renderChart(displayIdx, options) {
     updateUIState();
     updateTopPrice();
     updatePortfolioUI();
+    refreshChips();   // 早盘/尾盘、主题切换、缩放窗口后保持筹码峰与价格轴对齐
 }

@@ -3,6 +3,7 @@
 // ============================================================
 import { state } from './state.js';
 import { formatVol, getCSSColor } from './utils.js';
+import { syncChipToItem } from './chipDistribution.js';
 
 // ---------- 信息栏 ----------
 export function resetInfoBar() {
@@ -133,6 +134,7 @@ export function fillInfoBar(item, updateTop = true) {
         document.getElementById('infoPeTTM').className = 'info-value black-text';
         state.selectedItem = item;
         if (updateTop) updateTopPrice();
+        syncChipToItem(item);   // 筹码峰跟随信息栏（早盘那根按昨日计算）
         return;
     }
 
@@ -169,6 +171,7 @@ export function fillInfoBar(item, updateTop = true) {
 
     state.selectedItem = item;
     if (updateTop) updateTopPrice();
+    syncChipToItem(item);   // 筹码峰跟随信息栏
 }
 
 // ---------- 状态标签 ----------

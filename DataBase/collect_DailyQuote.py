@@ -9,24 +9,53 @@
     python collect_dailyquote.py --restart 000300           # 从该代码开始采集
 """
 
+import os
+import sys
+
+# 允许从仓库根目录（python DataBase/collect_DailyQuote.py）
+# 或从 DataBase 目录（python collect_DailyQuote.py）两种方式启动
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import baostock as bs
 import logging
 import argparse
+import socket
 import time
 import random
 from datetime import datetime, timedelta
 from sqlalchemy import text
-from DataBase import Base, engines, get_session
-from Models import StockList, DailyQuote
+from DataBase import engines, get_session
+from DataBase.Models import StockList, DailyQuote
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 确保 daily_quote 表存在
-Base.metadata.create_all(bind=engines["daily_quote"])
+# Baostock 底层是裸 socket，不设超时时一旦网络卡住会无限挂起（实测出现过）。
+# 这里设 60 秒超时，配合下面"单只异常只跳过该只"的逻辑，避免整轮回填被一只股票卡死。
+SOCKET_TIMEOUT = 60
+socket.setdefaulttimeout(SOCKET_TIMEOUT)
+
+# 只创建本脚本负责的表（不再把 4 张表全建进 DateData.db）
+DailyQuote.__table__.create(bind=engines["daily_quote"], checkfirst=True)
 
 # 允许采集的板块
 ALLOWED_BOARDS = {'主板', '创业板', '科创板'}
+
+# 单只股票一次性写入（仍是 INSERT OR REPLACE，重跑同一区间结果不变）
+UPSERT_SQL = text("""
+    INSERT OR REPLACE INTO daily_quote
+    (code, date, preclose, open, high, low, close, volume, amount, turn)
+    VALUES (:code, :date, :preclose, :open, :high, :low, :close, :volume, :amount, :turn)
+""")
+
+# Baostock 日线字段
+K_FIELDS = "date,open,high,low,close,preclose,volume,amount,turn"
+
+def to_bs_code(code, market=None):
+    """拼 Baostock 代码：优先用 stock_list.market，缺失时回退到代码前缀"""
+    if market in ('SH', 'SZ'):
+        return f"{market.lower()}.{code}"
+    return f"sh.{code}" if code.startswith('6') else f"sz.{code}"
 
 def safe_float(val):
     if val is None or val == '':
@@ -36,12 +65,12 @@ def safe_float(val):
     except ValueError:
         return 0.0
 
-def fetch_daily_quote_for_code(code, start_date, end_date):
+def fetch_daily_quote_for_code(code, start_date, end_date, market=None):
     """获取单只股票的日线原始数据（不复权）"""
-    bs_code = f"sh.{code}" if code.startswith('6') else f"sz.{code}"
+    bs_code = to_bs_code(code, market)
     rs = bs.query_history_k_data_plus(
         bs_code,
-        "date,open,high,low,close,preclose,volume",
+        K_FIELDS,
         start_date=start_date,
         end_date=end_date,
         frequency="d",
@@ -53,7 +82,7 @@ def fetch_daily_quote_for_code(code, start_date, end_date):
     rows = []
     while (rs.error_code == '0') & rs.next():
         row = rs.get_row_data()
-        if len(row) == 7:
+        if len(row) == 9:
             date_str = row[0]
             open_p = safe_float(row[1])
             high = safe_float(row[2])
@@ -61,6 +90,8 @@ def fetch_daily_quote_for_code(code, start_date, end_date):
             close = safe_float(row[4])
             preclose = safe_float(row[5])
             volume = safe_float(row[6])
+            amount = safe_float(row[7])
+            turn = safe_float(row[8])
             if open_p == 0 and high == 0 and low == 0 and close == 0:
                 continue
             rows.append({
@@ -70,49 +101,51 @@ def fetch_daily_quote_for_code(code, start_date, end_date):
                 'low': low,
                 'close': close,
                 'preclose': preclose,
-                'volume': volume
+                'volume': volume,
+                'amount': amount,
+                'turn': turn
             })
     return rows
 
 def save_daily_quote(code, rows):
-    """保存日线数据（upsert）"""
+    """保存日线数据（upsert，单只一次性批量写入）"""
     if not rows:
         return 0
+    params = [
+        {
+            'code': code,
+            'date': datetime.strptime(row['date'], '%Y-%m-%d').date().isoformat(),
+            'preclose': row['preclose'],
+            'open': row['open'],
+            'high': row['high'],
+            'low': row['low'],
+            'close': row['close'],
+            'volume': row['volume'],
+            'amount': row['amount'],
+            'turn': row['turn'],
+        }
+        for row in rows
+    ]
     session = get_session('daily_quote')
-    inserted = 0
     try:
-        for row in rows:
-            date_obj = datetime.strptime(row['date'], '%Y-%m-%d').date()
-            stmt = text("""
-                INSERT OR REPLACE INTO daily_quote 
-                (code, date, preclose, open, high, low, close, volume)
-                VALUES (:code, :date, :preclose, :open, :high, :low, :close, :volume)
-            """)
-            session.execute(stmt, {
-                'code': code,
-                'date': date_obj,
-                'preclose': row['preclose'],
-                'open': row['open'],
-                'high': row['high'],
-                'low': row['low'],
-                'close': row['close'],
-                'volume': row['volume']
-            })
-            inserted += 1
+        session.execute(UPSERT_SQL, params)
         session.commit()
-        logger.info(f"{code} upsert {inserted} 条日线")
+        logger.info(f"{code} upsert {len(params)} 条日线")
+        return len(params)
     except Exception as e:
         logger.error(f"{code} 保存失败: {e}")
         session.rollback()
+        return 0
     finally:
         session.close()
-    return inserted
 
 def collect_daily_quotes(start_date, end_date, start_code=None, single_code=None):
     """主控函数"""
     session = get_session('stock_list')
     try:
-        query = session.query(StockList.code).filter(StockList.board.in_(ALLOWED_BOARDS))
+        query = session.query(StockList.code, StockList.market).filter(
+            StockList.board.in_(ALLOWED_BOARDS)
+        )
         if single_code:
             query = query.filter(StockList.code == single_code)
             logger.info(f"指定单只股票: {single_code}")
@@ -121,12 +154,16 @@ def collect_daily_quotes(start_date, end_date, start_code=None, single_code=None
             logger.info(f"从 {start_code} 开始采集")
         else:
             logger.info("全量采集所有股票")
-        codes = [row[0] for row in query.all()]
-        total = len(codes)
+        targets = [(row[0], row[1]) for row in query.all()]
+        total = len(targets)
         if total == 0:
             logger.warning("没有需要采集的股票")
             return
         logger.info(f"共 {total} 只股票，日期 {start_date} ~ {end_date}")
+    except Exception as e:
+        logger.error(f"读取 StockList.db 失败: {e}")
+        logger.error("请先运行 python DataBase/collect_StockList.py 生成股票列表")
+        return
     finally:
         session.close()
 
@@ -138,7 +175,7 @@ def collect_daily_quotes(start_date, end_date, start_code=None, single_code=None
     success = fail = 0
     start_time = time.time()
     try:
-        for idx, code in enumerate(codes):
+        for idx, (code, market) in enumerate(targets):
             current = idx + 1
             percent = current / total * 100
             elapsed = time.time() - start_time
@@ -149,7 +186,13 @@ def collect_daily_quotes(start_date, end_date, start_code=None, single_code=None
                 f"已用 {str(timedelta(seconds=int(elapsed)))} | "
                 f"预计剩余 {str(timedelta(seconds=int(remaining)))}"
             )
-            rows = fetch_daily_quote_for_code(code, start_date, end_date)
+            try:
+                rows = fetch_daily_quote_for_code(code, start_date, end_date, market)
+            except Exception as e:
+                # 单只异常（多为网络超时）只跳过该只，不中断整轮
+                fail += 1
+                logger.warning(f"{code} 采集异常，跳过: {e}")
+                continue
             if rows:
                 save_daily_quote(code, rows)
                 success += 1
